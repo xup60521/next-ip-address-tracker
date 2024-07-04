@@ -8,8 +8,8 @@ This is a solution to the [IP address tracker challenge on Frontend Mentor](http
 -   [My process](#my-process)
     -   [Built with](#built-with)
     -   [What I learned](#what-i-learned)
-        -   [ViewTransition API](#viewtransition-api)
-        -   [Context and custom hook](#context-and-custom-hook)
+        -   [Leaflet](#leaflet)
+        -   [Data Fetching](#data-fetching)
     -   [Resources](#resources)
 -   [Acknowledgment](#acknowledgment)
 
@@ -113,49 +113,11 @@ Pass the marker as children in the `<MapContainer />` component. The marker shou
 
 #### Data Fetching
 
-Server action is introduced in Next.js 14. Not only in server component, it can also be used in client component, acting like a RPC.
+When the page is loaded, an useEffect will fire, fetching the initial data from ```/api``` end point. On the backend side, the route handler parses the request url, and make the actual request to the ipify API.
 
-In a separate `action.ts` file, define a server action
+BTW, client-side fetch function is defined at ```action.ts```.
 
-```ts
-"use server";
-
-import { env } from "./env";
-import { IPTrackerType } from "./type";
-
-const baseURL = "https://geo.ipify.org/api/v2/country,city";
-
-export async function get_ip_detail(props: {
-    ip?: string;
-    domain?: string;
-}) {
-    const { ip, domain } = props;
-    const url = new URLSearchParams("");
-    url.set("apiKey", env.IPIFY_API_KEY);
-    if (ip) {
-        url.set("ipAddress", ip);
-    }
-    if (domain) {
-        url.set("domain", domain);
-    }
-
-    const data = await fetch(`${baseURL}?${url.toString()}`).then((res) =>
-        res.json()
-    );
-    if (data["code"]) {
-        return null;
-    }
-    return data as IPTrackerType;
-}
-```
-
-To be honest, it's not the safest code in terms of data fetching. But for now it works.
-
-On the client side, I use jotai to store the return data. Still it is not the best practice, ```react-query``` should help.
-
-#### Result
-
-When the page is loaded, an useEffect will fire, fetching the initial data. 
+I use jotai to handle the fetch result. Even though it's not the safest method to manage remote state, it currently works.
 
 ### Resources
 
@@ -163,6 +125,8 @@ When the page is loaded, an useEffect will fire, fetching the initial data.
 
 -   TailwindCSS Docs - <https://tailwindcss.com/docs>
 
+-   react-leaflet docs: <https://react-leaflet.js.org/docs/start-introduction/>
+
 ## Acknowledgment
 
--   ViewTransition API tutorial - <https://blog.boggy.tw/2023/09/28/用view-transitions-api做有趣的動態吧/>
+-  get client's public ip: <https://stackoverflow.com/a/72565046>
