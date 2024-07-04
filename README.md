@@ -24,9 +24,9 @@ Users should be able to:
 
 Links:
 
-- GitHub Repo: <https://github.com/xup60521/react-rock-paper-scissors-game>
+- GitHub Repo: <https://github.com/xup60521/next-ip-address-tracker>
 
-- Live Website: <https://xup60521.github.io/react-rock-paper-scissors-game/>
+- Live Website: <https://next-ip-address-tracker-xi.vercel.app/>
 
 ```bash
 # install dependencies
@@ -39,13 +39,15 @@ pnpm run dev
 
 ### Built with
 
-- React (powered by vite)
+- React
 
-- React Context API
+- Next.js
 
 - TailwindCSS
 
-- ViewTransition API
+- Leaflet
+
+- 
 
 ### What I learned
 
