@@ -4,29 +4,29 @@ This is a solution to the [IP address tracker challenge on Frontend Mentor](http
 
 ## Table of contents
 
-- [Overview](#overview)
-- [My process](#my-process)
-    - [Built with](#built-with)
-    - [What I learned](#what-i-learned)
-        - [ViewTransition API](#viewtransition-api)
-        - [Context and custom hook](#context-and-custom-hook)
-    - [Resources](#resources)
-- [Acknowledgment](#acknowledgment)
+-   [Overview](#overview)
+-   [My process](#my-process)
+    -   [Built with](#built-with)
+    -   [What I learned](#what-i-learned)
+        -   [ViewTransition API](#viewtransition-api)
+        -   [Context and custom hook](#context-and-custom-hook)
+    -   [Resources](#resources)
+-   [Acknowledgment](#acknowledgment)
 
 ## Overview
 
 Users should be able to:
 
-- View the optimal layout for each page depending on their device's screen size
-- See hover states for all interactive elements on the page
-- See their own IP address on the map on the initial page load
-- Search for any IP addresses or domains and see the key information and location
+-   View the optimal layout for each page depending on their device's screen size
+-   See hover states for all interactive elements on the page
+-   See their own IP address on the map on the initial page load
+-   Search for any IP addresses or domains and see the key information and location
 
 Links:
 
-- GitHub Repo: <https://github.com/xup60521/next-ip-address-tracker>
+-   GitHub Repo: <https://github.com/xup60521/next-ip-address-tracker>
 
-- Live Website: <https://next-ip-address-tracker-xi.vercel.app/>
+-   Live Website: <https://next-ip-address-tracker-xi.vercel.app/>
 
 ```bash
 # install dependencies
@@ -39,147 +39,130 @@ pnpm run dev
 
 ### Built with
 
-- React
+-   React
 
-- Next.js
+-   Next.js
 
-- TailwindCSS
+-   TailwindCSS
 
-- Leaflet
+-   Leaflet (with OpenStreetMap)
 
-- 
+-   Jotai (global state management)
 
 ### What I learned
 
-#### ViewTransition API
+#### Leaflet
 
- I’ve been interested in this new tech in a while. This is my first time using view transition api.
+Instead of Google maps, I use leaflet with OpenStreetMap in this project. To be more specific, I use `react-leaflet`, a react wrapper for leaflet, in this challenge.
 
-At first, `<SelectPanel />` shows up, and user can pick from the three options.
-
-After that, view transition api jumps in.
-
-```ts
-// it's hard to name things...
-export const useStartTransition = () => {
-    return function (func: () => void) {
-        const document2 = document as unknown as Document & {
-            startViewTransition: (a: () => void) => void;
-        };
-      // Document currently doesn't have startViewTransition type,
-        if ("startViewTransition" in document2) {
-            document2.startViewTransition(() => {
-              // using flush sync to force update page
-                flushSync(() => {
-                    func();
-                });
-            });
-        } else {
-            func();
-        }
-    };
-};
-```
-
-`startViewTransition` is directly attached to the document object, so we first check if the method exists
-
-In doing so, whether user’s browser support view transition api or not, our web app can run no matter what.
-
-
-#### Context and custom Hook
-
-Besides, the game logic and state live through the whole app, not only in individual components. Luckily react has a built in solution — context.
-
-
+A basic map setup is quite simple
 
 ```tsx
-import { type Picked } from "@/lib/utils";
-import { createContext, useState } from "react";
-import { unknown } from "zod";
+"use client";
+import "leaflet/dist/leaflet.css";
+import { MapContainer, TileLayer, ZoomControl } from "react-leaflet";
 
-export const pickContext = createContext({
-    myPick: "" as Picked,
-    setMyPick: unknown as React.Dispatch<React.SetStateAction<Picked>>,
-    housePick: "" as Picked,
-    setHousePick: unknown as React.Dispatch<React.SetStateAction<Picked>>,
-    score: 0,
-    setScore: unknown as React.Dispatch<React.SetStateAction<number>>
-});
-
-export function PickProvider({ children }: { children: React.ReactNode }) {
-    const [myPick, setMyPick] = useState<Picked>("");
-    const [housePick, setHousePick] = useState<Picked>("");
-    const [score, setScore] = useState(0)
+export default function Map() {
+    const position = { lat: 24.137396608878987, lng: 120.68692065044608 };
     return (
-        <pickContext.Provider
-            value={{ myPick, setMyPick, housePick, setHousePick, score, setScore }}
+        <MapContainer
+            center={position}
+            zoom={8}
+            scrollWheelZoom={true}
+            className="z-0 h-full w-full"
+            zoomControl={false}
         >
-            {children}
-        </pickContext.Provider>
+            <ZoomControl position="bottomleft" />
+            <TileLayer
+                url={"https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"}
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            />
+        </MapContainer>
     );
 }
 ```
 
-For a rock, paper, scissors game, it’s not enough. Though we can access the state from anywhere inside the context provider, we still need to write the game logic for every components involved.
-
-For the sake of that, we need to do something further. If we make the game logic an individual hook, any component can directly access to it, performing any operation anywhere.
+In this challenge, we need to mark the position of a domain or ip. A built in marker can help.
 
 ```tsx
-export const useGame = () => {
-    const transition = useStartTransition();
-    const { setMyPick, myPick, setHousePick, housePick, score, setScore } =
-        useContext(pickContext);
-    return {
-        setPicked(e: Picked) {
-            transition(() => {
-                setMyPick(e);
-            });
-            setTimeout(() => {
-                const randomNumber = Math.floor(Math.random() * 3);
-                const housePick =
-                    randomNumber === 0
-                        ? "paper"
-                        : randomNumber === 1
-                        ? "rock"
-                        : "scissors";
-                setHousePick(housePick);
-              // due to js closure, even though setMyPick
-              // happens before the setTimeout callback,
-              // the update function won't affect 
-              // the value of myPick.
-                const whoIsWinning = whoWins(e, housePick);
-                setScore((prev) => {
-                    if (whoIsWinning === "p1") {
-                        return prev + 1;
-                    }
-                    if (whoIsWinning === "p2" && prev !== 0) {
-                        return prev - 1;
-                    }
-                    return prev;
-                });
-            }, 1000);
-        },
-        myPick,
-        housePick,
-        score,
-        newGame() {
-            transition(() => {
-                setMyPick("");
-                setHousePick("");
-            });
-        },
-    };
-};
+import { Icon } from "leaflet";
+export default function () {
+    const icon = new Icon({
+        iconUrl: "https://cdn-icons-png.flaticon.com/512/3177/3177361.png",
+        iconSize: [32, 32],
+    });
+    return (
+        <Marker
+            position={{
+                lat: newPosition.location.lat,
+                lng: newPosition.location.lng,
+            }}
+            icon={icon}
+        ></Marker>
+    );
+}
 ```
 
-Although I separate `useGame` and `pickContext` in this case, it’s totally fine to write game logic in the context.
+Pass the marker as children in the `<MapContainer />` component. The marker should show up in the map.
+
+```html
+<MapContainer>
+    <Marker />
+</MapContainer>
+```
+
+#### Data Fetching
+
+Server action is introduced in Next.js 14. Not only in server component, it can also be used in client component, acting like a RPC.
+
+In a separate `action.ts` file, define a server action
+
+```ts
+"use server";
+
+import { env } from "./env";
+import { IPTrackerType } from "./type";
+
+const baseURL = "https://geo.ipify.org/api/v2/country,city";
+
+export async function get_ip_detail(props: {
+    ip?: string;
+    domain?: string;
+}) {
+    const { ip, domain } = props;
+    const url = new URLSearchParams("");
+    url.set("apiKey", env.IPIFY_API_KEY);
+    if (ip) {
+        url.set("ipAddress", ip);
+    }
+    if (domain) {
+        url.set("domain", domain);
+    }
+
+    const data = await fetch(`${baseURL}?${url.toString()}`).then((res) =>
+        res.json()
+    );
+    if (data["code"]) {
+        return null;
+    }
+    return data as IPTrackerType;
+}
+```
+
+To be honest, it's not the safest code in terms of data fetching. But for now it works.
+
+On the client side, I use jotai to store the return data. Still it is not the best practice, ```react-query``` should help.
+
+#### Result
+
+When the page is loaded, an useEffect will fire, fetching the initial data. 
 
 ### Resources
 
-- Google font - <https://fonts.google.com>
+-   Google font - <https://fonts.google.com>
 
-- TailwindCSS Docs - <https://tailwindcss.com/docs>
+-   TailwindCSS Docs - <https://tailwindcss.com/docs>
 
 ## Acknowledgment
 
-- ViewTransition API tutorial - <https://blog.boggy.tw/2023/09/28/用view-transitions-api做有趣的動態吧/>
+-   ViewTransition API tutorial - <https://blog.boggy.tw/2023/09/28/用view-transitions-api做有趣的動態吧/>
