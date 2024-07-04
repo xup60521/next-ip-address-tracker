@@ -38,12 +38,12 @@ export default function InputIP() {
                             handleEnter();
                         }
                     }}
-                    className="px-6 py-3 rounded-l-lg flex-grow min-w-0"
+                    className="px-6 py-3 rounded-l-lg flex-grow min-w-0 cursor-pointer"
                     placeholder="Search for any IP address or domain"
                 />
                 <button
                     onMouseDown={handleEnter}
-                    className="h-full px-5 text-white bg-black rounded-r-lg"
+                    className="h-full px-5 text-white bg-black transition hover:bg-gray-800 rounded-r-lg"
                 >{`>`}</button>
             </div>
             <div className="md:grid md:grid-cols-4 md:gap-0 gap-2 md:w-[80vw] flex flex-col w-full rounded-lg md:py-8 py-6 md:translate-y-[50%] bg-white md:m-0 -mb-[12.5rem] my-4">
